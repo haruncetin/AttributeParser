@@ -1,5 +1,6 @@
 # attribute_parser
 
+<code>
 4 3
 <tag1 value = "HelloWorld">
 <tag2 name = "Name1">
@@ -8,7 +9,6 @@
 tag1.tag2~name
 tag1~name
 tag1~value
-
 
 2 1
 <tag1 value = "HelloWorld">
@@ -36,3 +36,4 @@ a.d.e~strength
 a.c.d.e~strength
 d~sze
 a.c.d~size
+</code>
