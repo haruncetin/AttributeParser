@@ -1,6 +1,6 @@
 # attribute_parser
 
-<code>
+```
 4 3
 <tag1 value = "HelloWorld">
 <tag2 name = "Name1">
@@ -36,4 +36,4 @@ a.d.e~strength
 a.c.d.e~strength
 d~sze
 a.c.d~size
-</code>
+```
