@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <regex>
 
+#define C_ALL(X) cbegin(X), cend(X)
+
 using namespace std;
 
 
@@ -17,8 +19,8 @@ inline string trim(string& str, char delim)
     return str;
 }
 
-vector<string> split_r(string &str, const regex rx = regex{"\\s+"}){
-    sregex_token_iterator it(str.begin(), str.end(), rx, -1);
+vector<string> split_r(const string &str, const regex &re = regex{"\\s+"}){
+    sregex_token_iterator it(str.begin(), str.end(), re, -1);
     sregex_token_iterator end;
     return {it, end};
 }
@@ -40,7 +42,29 @@ map<string, map<string, string>>::iterator search(map<string, map<string, string
     return begin;
 }
 
+map<string, string> parse_attributes(const string& str) {
+    map<string, string> attr_map;
+
+    regex re("(\\w+)\\s*=\\s*\"(.*?)\"");
+    
+    const vector<smatch> matches {
+        sregex_iterator{str.cbegin(), str.cend(), re},
+        sregex_iterator{}
+    };
+
+    for(auto m : matches) {
+        // cout << m.str(1) << " = " << m.str(2) << endl;
+        attr_map[m.str(1)] = m.str(2);
+    }
+
+    return attr_map;
+}
+
 int main() {
+
+    // parse_attributes("attr1 = \"Hello World\" attr2=\"Value2\" attr3   =  \"Value 3\"");
+
+    // return 0;
 
     int Q, N;
     scanf("%d %d", &N, &Q);
@@ -53,14 +77,8 @@ int main() {
         if(line[0] == '<' && line[1] != '/' && line[line.size()-1] == '>') {
             line = trim(line, '<');
             line = trim(line, '>');
-            stringstream ss(line);
-            ss >> tag;
-            // while(ss >> attr >> ch >> val) {
-            while(ss >> attrs) {
-                auto r = split_r(attrs, regex{"=\""});
-                string key = r.at(0), val = r.at(1);
-                maps[tag][key] = trim(val, '"');
-            }
+            stringstream(line) >> tag;
+            maps[tag] = parse_attributes(line);
         }
     }
     // cout << "maps.size() = " << maps.size() << endl;
