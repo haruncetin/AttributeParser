@@ -22,12 +22,8 @@ private:
         } 
         
         for(Node *child : node->getChildren()) {
-            if(child->getChildren().size() > 0) {
-                _search(child, tag);
-            }
+            _search(child, tag);
         }
-        
-        return *node;
     }
 
 public:
