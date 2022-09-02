@@ -7,10 +7,77 @@
 #include <algorithm>
 #include <regex>
 
-#define C_ALL(X) cbegin(X), cend(X)
-
 using namespace std;
 
+class Node {
+private:
+    string _tag;
+    map<string, string> _attrs;
+    vector<Node *> _childs;
+
+    Node _search(Node *node, string tag) {
+        
+        if(node->getTag().compare(tag) == 0) {
+            return *node;
+        } 
+        
+        for(Node *child : node->getChildren()) {
+            if(child->getChildren().size() > 0) {
+                _search(child, tag);
+            }
+        }
+        
+        return *node;
+    }
+
+public:
+    Node(string tag) : _tag(tag) {};
+    
+    Node() {}
+
+    void setTag(string tag) {
+        _tag = tag;
+    }
+
+    string getTag() {
+        return _tag;
+    }
+
+    void addChild(Node *node) {
+        _childs.push_back(node);
+    }
+
+    // Node getChild(string tag) {
+    //     vector<Node *> node;
+    //     copy_if(_childs.begin(), _childs.end(), back_inserter(node), [&tag](Node _node) { return _node.getTag().compare(tag) == 0; });
+    //     return *node.at(0);
+    // }
+
+    vector<Node *> getChildren() {
+        return _childs;
+    }
+
+    void addAllAttributes(map<string, string> attrs) {
+        _attrs = attrs;
+    }
+
+    map<string, string> getAllAttributes() {
+        return _attrs;
+    }
+    
+    void setAttribute(string attr, string val) {
+        _attrs[attr] = val;
+    }
+
+    string getAttribute(string attr) {
+        return _attrs.at(attr);
+    }
+
+    Node search(string tag) {
+        return _search(this, tag);
+    }
+
+};
 
 inline string trim(string& str, char delim)
 {
@@ -35,12 +102,12 @@ vector<string> split(string &str, char d) {
     return v;
 }
 
-map<string, map<string, string>>::iterator search(map<string, map<string, string>>::iterator begin, map<string, map<string, string>>::iterator end, string val) {
-    if(begin != end && begin->first != val) {
-        search(++begin, end, val);
-    }
-    return begin;
-}
+// map<string, map<string, string>>::iterator search(map<string, map<string, string>>::iterator begin, map<string, map<string, string>>::iterator end, string val) {
+//     if(begin != end && begin->first != val) {
+//         search(++begin, end, val);
+//     }
+//     return begin;
+// }
 
 map<string, string> parse_attributes(const string& str) {
     map<string, string> attr_map;
@@ -53,7 +120,6 @@ map<string, string> parse_attributes(const string& str) {
     };
 
     for(auto m : matches) {
-        // cout << m.str(1) << " = " << m.str(2) << endl;
         attr_map[m.str(1)] = m.str(2);
     }
 
@@ -64,12 +130,26 @@ int main() {
 
     // parse_attributes("attr1 = \"Hello World\" attr2=\"Value2\" attr3   =  \"Value 3\"");
 
+    Node root = Node("root");
+
+    // root->addChild(Node("Tag1"));
+
+    // string tagName = root->getChild("Tag1").getTag();
+
+    // cout << tagName << endl;
+
     // return 0;
 
     int Q, N;
     scanf("%d %d", &N, &Q);
     
     map<string, map<string, string>> maps;
+    
+    Node *node, *temp;
+    stack<Node *> parse_stack;
+    
+    parse_stack.push(&root);
+
     for(int i=0; i<N; i++) {
         char ch;
         string line, tag, attrs;
@@ -78,18 +158,45 @@ int main() {
             line = trim(line, '<');
             line = trim(line, '>');
             stringstream(line) >> tag;
-            maps[tag] = parse_attributes(line);
+            // root->addChild(Node(tag));
+            // root->getChild(tag).addAllAttributes(parse_attributes(line));
+            // maps[tag] = parse_attributes(line);
+            temp = new Node(tag);
+            temp->addAllAttributes(parse_attributes(line));
+            parse_stack.push(temp);
+        } else {
+            line = trim(line, '<');
+            line = trim(line, '/');
+            line = trim(line, '>');            
+            stringstream(line) >> tag;
+            if(parse_stack.top()->getTag().compare(tag) == 0) {
+                temp = parse_stack.top();
+                parse_stack.pop();
+                node = parse_stack.top();
+                node->addChild(temp);
+            }
         }
     }
-    // cout << "maps.size() = " << maps.size() << endl;
-    // for(auto it = maps.begin(); it != maps.end(); it++){
-    //     cout << it->first << endl;
-    //     for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++)
-    //     {
-    //         cout << it2->first << "->" << it2->second << endl;
-    //     }
+    
+    Node found = root.search("e");
+    if(!found.getTag().empty()) {
+        cout << "Found: " << found.getTag() << endl;
+    } else {
+        cout << "Not found!" << endl;
+    }
+
+    return 0;
+
+
+    cout << "maps.size() = " << maps.size() << endl;
+    for(auto it = maps.begin(); it != maps.end(); it++){
+        cout << it->first << endl;
+        for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++)
+        {
+            cout << it2->first << "->" << it2->second << endl;
+        }
         
-    // }
+    }
     for(int i = 0; i < Q; i++) {
         string line, item, tag, attr;
         getline(cin >> ws, line);
@@ -103,26 +210,23 @@ int main() {
         cout << endl;
         auto it = maps.begin();
         // cout << "Path: ";
-        for(int i = 0; i < path.size(); i++) {
-            // cout << path[i] << (i < path.size() - 1 ? " -> " : string());
-            if(i < path.size() - 1) {
-                it = search(maps.begin(), maps.end(), path[i]);
-                if(it->first.empty()){
-                    cout << endl;
-                    cout << "Not Found!"<< endl;
-                    break;
-                }
-            } else {
-                string val = it->second[path[i]];
-                if(!val.empty()) {
-                    cout << endl;
-                    cout << "Found: " << val << endl;
-                } else {
-                    cout << endl;
-                    cout << "Not Found!" << endl;                    
-                }
-            }
-        }
+        // for(int i = 0; i < path.size(); i++) {
+        //     // cout << path[i] << (i < path.size() - 1 ? " -> " : string());
+        //     if(i < path.size() - 1) {
+        //         it = search(maps.begin(), maps.end(), path[i]);
+        //         if(it->first.empty()){
+        //             cout << "Not Found!"<< endl;
+        //             break;
+        //         }
+        //     } else {
+        //         string val = it->second[path[i]];
+        //         if(!val.empty()) {
+        //             cout << val << endl;
+        //         } else {
+        //             cout << "Not Found!" << endl;                    
+        //         }
+        //     }
+        // }
         cout << endl;
     }
     
