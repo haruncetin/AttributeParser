@@ -1,5 +1,8 @@
-# attribute_parser
+# Attribute Parser of Hackerrank
 
+This code is created from Attribute Parser challenge of Hackerrank platform. It takes a list of html-like xml markup expressions and parses all. Then it can be accessed by "." for tags and "\~" for attributes of tags (i.e. tag1\~value, tag1.tag2\~name).
+
+Example inputs:
 ```
 4 3
 <tag1 value = "HelloWorld">
